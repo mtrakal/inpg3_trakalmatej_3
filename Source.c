@@ -9,18 +9,20 @@
 // k priblizeni nebo vzdaleni telesa.
 //---------------------------------------------------------------------
 
+#pragma comment( linker, "/subsystem:\"windows\" /entry:\"mainCRTStartup\"" ) // skryje okno konzole
 #include <GL/glut.h>                            // hlavickovy soubor funkci GLUTu a OpenGL
-
-
-
-enum {                                          // operace, ktere se mohou provadet s mysi:
-    ROTATE,                                     // rotace objektu
-    TRANSLATE,                                  // posun objektu
-} operation=ROTATE;
 
 int   xnew=0, ynew=0, znew=20;                  // soucasna pozice mysi, ze ktere se pocitaji rotace a posuvy
 int   xold=0, yold=0, zold=20;                  // minula pozice mysi, ze ktere se pocitaji rotace a posuvy
 int   xx, yy, zz;                               // bod, ve kterem se nachazi kurzor mysi
+
+int a=10;	// sirka kuzelove plochy
+int b=10;	// vyska kuzelove plochy
+int pocetPlosek = 100; // pocet plosek, ktere se vykresluji na osach
+int m=0;	// x souradnice vrcholu kuzele
+int n=0;	// y souradnice vrcholu kuzele
+int p=0;	// z souradnice vrcholu kuzele
+int krok=5;	// velikost kroku pri otaceni
 
 int   windowWidth;                              // sirka okna
 int   windowHeight;                             // vyska okna
@@ -92,8 +94,12 @@ void setPerspectiveProjection(void)
 //--------------------------------------------------------------------
 void drawObjectNormal(void)
 {
-    glColor3f(1.0f, 1.0f, 1.0f);
-    glutSolidCone(10,10,32,32);
+	glColor3f(1.0f, 1.0f, 1.0f);
+	glTranslatef(m, n, p-b);					// posun pocatku vykreslovani objektu
+	glutWireCone(a,b,pocetPlosek,pocetPlosek);	//vykreslení drátového modelu kuželové plochy
+	glTranslatef(0, 0, 2*b);					// posun pocatku vykreslovani objektu
+	glRotatef(180, 0.0f, 1.0f, 0.0f);
+	glutWireCone(a,b,pocetPlosek,pocetPlosek);	//vykreslení drátového modelu kuželové plochy
 }
 
 
@@ -121,63 +127,75 @@ void onDisplay(void)
 //---------------------------------------------------------------------
 void onKeyboard(unsigned char key, int x, int y)
 {
-    if (key>='A' && key<='Z')                   // uprava velkych pismen na mala
-        key+='a'-'A';                           // pro zjednoduseni prikazu switch
-
-    switch (key) {
-        case 27:    exit(0);            break;  // ukonceni aplikace
-        case 'q':   exit(0);            break;  // ukonceni aplikace
-        default:                        break;
-    }
-}
-
-
-
-//---------------------------------------------------------------------
-// Tato funkce je volana pri stisku ci pusteni tlacitka mysi
-//---------------------------------------------------------------------
-void onMouseButton(int button, int state, int x, int y)
-{
-    if (button==GLUT_LEFT_BUTTON) {             // pri zmene stavu leveho tlacitka
-        operation=ROTATE;
-        if (state==GLUT_DOWN) {                 // pri stlaceni tlacitka
-            xx=x;                               // zapamatovat pozici kurzoru mysi
-            yy=y;
-        }
-        else {                                  // pri pusteni tlacitka
-            xold=xnew;                          // zapamatovat novy pocatek
-            yold=ynew;
-        }
-        glutPostRedisplay();                    // prekresleni sceny
-    }
-    if (button==GLUT_RIGHT_BUTTON) {
-        operation=TRANSLATE;
-        if (state==GLUT_DOWN) zz=y;             // pri stlaceni tlacitka zapamatovat polohu kurzoru mysi
-        else zold=znew;                         // pri pusteni tlacitka zapamatovat novy pocatek
-        glutPostRedisplay();                    // prekresleni sceny
-    }
-}
-
-
-
-//---------------------------------------------------------------------
-// Tato funkce je volana pri pohybu mysi se stlacenym tlacitkem.
-// To, ktere tlacitko je stlaceno si musime predem zaznamenat do
-// globalni promenne stav ve funkci onMouseButton()
-//---------------------------------------------------------------------
-void onMouseMotion(int x, int y)
-{
-    switch (operation) {
-        case ROTATE:                            // stav rotace objektu
-            xnew=xold+x-xx;                     // vypocitat novou pozici
-            ynew=yold+y-yy;
-            glutPostRedisplay();                // a prekreslit scenu
-            break;
-        case TRANSLATE:                         // stav priblizeni/oddaleni objektu
-            znew=zold+y-zz;                     // vypocitat novou pozici
-            glutPostRedisplay();                // a prekreslit scenu
-            break;
-    }
+	switch (key) {
+	case 27:										// ukonceni aplikace
+		exit(0); 
+		break;  
+	case 'q':									// ukonceni aplikace
+		exit(0);
+		break;
+	case 'x':
+		xnew=xold+krok-xx;
+		xold=xnew;
+		glutPostRedisplay();
+		break;
+	case 'X':
+		xnew=xold-krok-xx;
+		xold=xnew;
+		glutPostRedisplay();                    // prekresleni sceny
+		break;
+	case 'y':
+		ynew=yold+krok-yy;
+		yold=ynew;
+		glutPostRedisplay();                    // prekresleni sceny
+		break;
+	case 'Y':
+		ynew=yold-krok-yy;
+		yold=ynew;
+		glutPostRedisplay();                    // prekresleni sceny
+		break;
+	case 'z':
+		znew=zold+krok-zz;
+		zold=znew;
+		glutPostRedisplay();                    // prekresleni sceny
+		break;
+	case 'Z':
+		znew=zold-krok-zz;
+		zold=znew;
+		glutPostRedisplay();                    // prekresleni sceny
+		break;
+	case 'm':
+		m=m+krok;
+		glutPostRedisplay();                    // prekresleni sceny
+		break;
+	case 'M':
+		m=m-krok;
+		glutPostRedisplay();                    // prekresleni sceny
+		break;
+	case 'n':
+		n=n+krok;
+		glutPostRedisplay();                    // prekresleni sceny
+		break;
+	case 'N':
+		n=n-krok;
+		glutPostRedisplay();                    // prekresleni sceny
+		break;
+	case 'p':
+		p=p+krok;
+		glutPostRedisplay();                    // prekresleni sceny
+		break;
+	case 'P':
+		p=p-krok;
+		glutPostRedisplay();                    // prekresleni sceny
+		break;
+	case 'r':									// reset posuvu
+		m=0;
+		n=0;
+		p=0;
+		glutPostRedisplay();                    // prekresleni sceny
+		break;
+	default:                        break;
+	}
 }
 
 
@@ -195,8 +213,6 @@ int main(int argc, char **argv)
     glutDisplayFunc(onDisplay);                 // registrace funkce volane pri prekreslovani okna
     glutReshapeFunc(onResize);                  // registrace funkce volane pri zmene velikosti okna
     glutKeyboardFunc(onKeyboard);               // registrace funkce volane pri stlaceni klavesy
-    glutMouseFunc(onMouseButton);               // registrace funkce volane pri stlaceni ci pusteni tlacitka
-    glutMotionFunc(onMouseMotion);              // registrace funkce volane pri pohybu mysi se stlacenym tlacitkem
     onInit();                                   // inicializace vykreslovani
     glutMainLoop();                             // nekonecna smycka, kde se volaji zaregistrovane funkce
     return 0;                                   // navratova hodnota vracena operacnimu systemu
